@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猶豫不決咖哩厚餐點選擇器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 基礎樣式 */
+        body {
+            font-family: 'Noto Sans TC', 'Share Tech Mono', monospace, sans-serif;
+            background-color: #0D001A; /* 保留深紫色基底，與星空更搭 */
+            color: #E6E6FA;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative; /* 為了背景星空定位 */
+            overflow: hidden; /* 防止星點溢出造成滾動條 */
+        }
+        
+        /* --- 宇宙星空背景 (V10) --- */
+        #galaxy-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* 確保在所有內容之後 */
+            background: transparent;
+            pointer-events: none; /* 讓其不影響點擊事件 */
+        }
+
+        /* 創建不同大小、位置的星星 */
+        .stars-1, .stars-2, .stars-3 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: animateStars 50s linear infinite; /* 緩慢移動 */
+        }
+        
+        /* 透過 box-shadow 生成大量星點 */
+        .stars-1 {
+            background: transparent;
+            box-shadow: 
+                -200px -150px 0 0px #FFF, 100px 50px 0 0px #FFF, 300px 200px 0 0px #FFF,
+                -50px 250px 0 0px #FFF, 400px -100px 0 0px #FFF, -300px 300px 0 0px #FFF,
+                -150px -50px 0 0px #FFF, 250px 180px 0 0px #FFF, -400px -200px 0 0px #FFF,
+                500px 10px 0 0px #FFF, -100px 400px 0 0px #FFF, 200px -300px 0 0px #FFF;
+            animation: animateStars 50s linear infinite, starFlicker 2s infinite alternate;
+        }
+
+        .stars-2 {
+            background: transparent;
+            box-shadow: 
+                -100px 0px 0 1px #FFF, 250px 150px 0 1px #FFF, -350px 50px 0 1px #FFF,
+                50px -200px 0 1px #FFF, -250px 280px 0 1px #FFF, 180px -50px 0 1px #FFF,
+                -300px 100px 0 1px #FFF, 400px -250px 0 1px #FFF, -50px -10px 0 1px #FFF,
+                150px 350px 0 1px #FFF, -200px -400px 0 1px #FFF, 500px 200px 0 1px #FFF;
+            animation: animateStars 70s linear infinite reverse, starFlicker 2.5s infinite alternate;
+            transform: scale(0.8) rotate(20deg); 
+        }
+
+        .stars-3 {
+            background: transparent;
+            box-shadow: 
+                -50px -200px 0 2px #FFF, 100px 300px 0 2px #FFF, -200px -100px 0 2px #FFF,
+                300px 0px 0 2px #FFF, -150px 150px 0 2px #FFF, 250px -250px 0 2px #FFF,
+                -300px -300px 0 2px #FFF, 400px 100px 0 2px #FFF, -500px 50px 0 2px #FFF,
+                20px -400px 0 2px #FFF, 350px 250px 0 2px #FFF, -100px 450px 0 2px #FFF;
+            animation: animateStars 90s linear infinite, starFlicker 3s infinite alternate;
+            transform: scale(0.6) rotate(-10deg); 
+        }
+
+        /* 星點緩慢閃爍動畫 */
+        @keyframes starFlicker {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        /* 星點緩慢移動動畫 */
+        @keyframes animateStars {
+            from { transform: translateX(0) translateY(0); }
+            to { transform: translateX(100vw) translateY(100vh); } 
+        }
+
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #00FFFF;
+            text-shadow: 0 0 5px #00FFFF;
+            font-weight: 900;
+        }
+        
+        main {
+            background: rgba(10, 0, 30, 0.8);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            border: 2px solid #00FFFF;
+        }
+
+        /* 輪盤、核心等基礎樣式 (略) */
+        #wheel-container {
+            position: relative;
+            width: 380px; 
+            height: 380px; 
+            margin: 40px auto;
+            border-radius: 50%;
+            border: 5px solid #00FF88;
+            box-shadow: 0 0 15px #00FF88, inset 0 0 10px #00FF88;
+            overflow: hidden; 
+            animation: pulse 4s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { box-shadow: 0 0 10px #00FF88, inset 0 0 5px #00FF88; }
+            to { box-shadow: 0 0 25px #00FF88, inset 0 0 15px #00FF88; }
+        }
+        
+        #spinner-wheel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .dish-slice {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            top: 0;
+            left: 50%;
+            transform-origin: 0% 100%;
+            overflow: hidden;
+        }
+        .dish-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #1A0033; 
+            transform: rotate(80deg) skewY(-70deg); 
+            transform-origin: 0 100%;
+        }
+        
+        .dish-slice:nth-child(even) .dish-content {
+            background-color: #330066; 
+        }
+
+        #chaos-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 5px solid #FF00FF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 50;
+            filter: drop-shadow(0 0 10px #FF00FF);
+        }
+        
+        #chaos-text {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: #FFF;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- 數據崩潰/破窗混沌動畫 --- */
+        @keyframes shatter {
+            0%, 100% { 
+                text-shadow: 0 0 4px #FF00FF, 0 0 0px #00FFFF; 
+                transform: translate(0); 
+                color: #FFF; 
+            }
+            25% { 
+                text-shadow: 1px 1px 0px #FF00FF, -1px -1px 0px #00FFFF; 
+                transform: translate(2px, 2px); 
+                color: #FFD700; 
+            }
+            50% { 
+                text-shadow: 3px 3px 1px #00FF88, -3px -3px 1px #FF00FF; 
+                transform: translate(-3px, -3px); 
+                color: #FFF; 
+            }
+            75% { 
+                text-shadow: -1px 0px 0px #00FFFF, 1px 0px 0px #FF00FF; 
+                transform: translate(1px, 0); 
+                color: #FFD700; 
+            }
+        }
+
+        @keyframes scale {
+            0%, 100% { font-size: 20px; }
+            40% { font-size: 22px; }
+            70% { font-size: 18px; }
+        }
+
+        .animating #chaos-text {
+            animation: shatter 0.2s infinite alternate, scale 0.5s infinite alternate; 
+        }
+        
+        #pointer {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent; 
+            border-right: 15px solid transparent; 
+            border-top: 30px solid #FF00FF; 
+            z-index: 100; 
+            filter: drop-shadow(0 0 10px #FF00FF);
+        }
+        
+        /* --- 圓形啟動按鈕 --- */
+        .action-btn {
+            background-color: #FF00FF; 
+            color: #0D001A;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, filter 0.3s, transform 0.2s; /* 為了放大效果添加 transform */
+            margin-top: 30px;
+            filter: drop-shadow(0 0 5px #FF00FF);
+        }
+        
+        #spin-btn {
+            padding: 30px; 
+            width: 150px; 
+            height: 150px;
+            border-radius: 50%; 
+            font-size: 20px;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background-color: #E600E6;
+            filter: drop-shadow(0 0 10px #FF00FF);
+        }
+
+        .action-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            filter: none;
+        }
+        
+        /* --- 增益選擇器 (略) --- */
+        #extra-meat-choices {
+            position: fixed;
+            top: 50%; 
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none; 
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #extra-meat-choices.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .extra-meat-btn {
+            background: #FF00FF; 
+            color: #0D001A; 
+            width: 140px; 
+            height: 140px;
+            padding: 0;
+            border-radius: 50%; 
+            border: 3px solid #00FFFF; 
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: 700;
+            filter: drop-shadow(0 0 8px #FF00FF);
+            transition: transform 0.3s, opacity 0.3s; 
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transform: translateX(0) scale(1);
+            animation: oscillate 2s infinite alternate ease-in-out;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #btn-extra-meat { margin-left: 20px; }
+        #btn-no-meat { margin-right: 20px; animation-delay: -1s; }
+        
+        @keyframes oscillate {
+            from { transform: translateX(0); }
+            to { transform: translateX(10px); }
+        }
+
+        /* --- 決策脈衝動畫 (略) --- */
+        @keyframes decide-pulse {
+            0%, 100% { transform: scale(1.0); box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+            50% { transform: scale(1.15); box-shadow: 0 0 25px #00FFFF, 0 0 5px #FF00FF; }
+        }
+
+        .extra-meat-btn.deciding {
+            animation: decide-pulse 0.5s infinite alternate; 
+        }
+
+        .extra-meat-btn.chosen {
+            animation: none; 
+            transform: scale(1.2) !important; 
+            border-color: #00FF88; 
+            filter: drop-shadow(0 0 15px #00FF88);
+        }
+        
+        /* Modal 樣式 */
+        #result-modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            visibility: hidden; 
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+        
+        #result-modal-container.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #recommendation-card {
+            background: #1A0033;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px #00FFFF;
+            border: 2px solid #00FFFF;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        #result-modal-container.visible #recommendation-card {
+            transform: translateY(0); 
+        }
+
+        .final-confirmation {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #00FF88;
+            color: #0D001A;
+            border-radius: 5px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .final-decision-text {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 36px; 
+            font-weight: 900;
+            color: #FF00FF; 
+            text-shadow: 0 0 5px #FF00FF;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* 放大「今天就這樣吃」按鈕 */
+        #close-modal-btn {
+            font-size: 24px;
+            padding: 15px 30px;
+            margin-top: 40px;
+            transform: scale(1.1); /* 視覺放大 */
+        }
+        
+        /* --- 新增提示視窗樣式 --- */
+        #final-message-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95); 
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200; /* 高於 result-modal */
+            cursor: pointer;
+        }
+        
+        #final-message-content {
+            background: #FF00FF;
+            color: #0D001A;
+            padding: 60px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px #FF00FF;
+            font-size: 40px;
+            font-weight: 900;
+            text-align: center;
+            transform: scale(0.8);
+            animation: bounceIn 0.5s forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .result-title {
+            font-size: 30px;
+            color: #00FF88; 
+            text-shadow: 0 0 5px #00FF88;
+            margin-bottom: 10px;
+        }
+        
+        .dish-name {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 36px;
+            font-weight: 900;
+            color: #FFFFFF;
+            margin-bottom: 15px;
+        }
+        
+        .dish-desc {
+            font-size: 18px;
+            font-weight: normal;
+            color: #00FFFF;
+            text-shadow: 0 0 2px #00FFFF;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="galaxy-background">
+        <div class="stars-1"></div>
+        <div class="stars-2"></div>
+        <div class="stars-3"></div>
+    </div>
+
+    <header>
+        <h1>🌌 猶豫不決咖哩厚餐點選擇器</h1>
+    </header>
+
+    <main>
+        <div id="wheel-container" class="animating">
+            <div id="pointer"></div>
+            <div id="spinner-wheel">
+                </div>
+            <div id="chaos-core">
+                <span id="chaos-text">等待指令...</span>
+            </div>
+        </div>
+
+        <button id="spin-btn" class="action-btn">給我建議</button>
+        
+        <button id="reset-btn-main" class="action-btn" style="display: none;">重新載入數據</button>
+    </main>
+    
+    <div id="extra-meat-choices">
+        <button class="extra-meat-btn" id="btn-extra-meat" data-choice="要倍肉">
+            <span class="meat-text">要倍肉</span>
+            <span class="meat-desc"> (數據超載)</span>
+        </button>
+        <button class="extra-meat-btn" id="btn-no-meat" data-choice="不要倍肉">
+            <span class="meat-text">不要倍肉</span>
+            <span class="meat-desc"> (穩定輸出)</span>
+        </button>
+    </div>
+
+    <div id="result-modal-container">
+        <div id="recommendation-card">
+            <h2 class="result-title" id="card-title">數據解析完成...</h2>
+            <p class="dish-name" id="result-name"></p>
+            <p class="dish-desc" id="result-desc"></p>
+            
+            <div class="final-confirmation" id="final-message"></div>
+            
+            <button id="close-modal-btn" class="action-btn" style="display: none;">今天就這樣吃</button>
+        </div>
+    </div>
+
+    <div id="final-message-modal">
+        <div id="final-message-content">
+            好乖～～～（摸頭
+        </div>
+    </div>
+
+    <script>
+        // 餐廳菜單資料庫 (18個菜色)
+        const menuDatabase = [
+            { name: '醬燒豆包 咖哩飯', desc: '素食選項，醬燒豆包搭配茶咖哩飯。' },
+            { name: '寂寞雞末 咖哩飯', desc: '獨特的雞末風味搭配茶咖哩飯。' },
+            { name: '小獅頭頭 咖哩飯', desc: '經典小獅頭搭配茶咖哩飯。' },
+            { name: '唐揚咖哩雞 咖哩飯', desc: '酥脆唐揚雞搭配茶咖哩飯。' },
+            { name: '秘燉牛肉 咖哩飯', desc: '秘燉牛肉搭配茶咖哩飯。' },
+            { name: '經典炸豬排 咖哩飯', desc: '經典炸豬排搭配茶咖哩飯。' },
+            { name: '香煎松阪豬 咖哩飯', desc: '香煎松阪豬搭配茶咖哩飯。' },
+            { name: '醬燒豆包 咖哩麵', desc: '素食選項，醬燒豆包搭配茶咖哩麵。' },
+            { name: '寂寞雞末 咖哩麵', desc: '獨特的雞末風味搭配茶咖哩麵。' },
+            { name: '小獅頭頭 咖哩麵', desc: '經典小獅頭搭配茶咖哩麵。' },
+            { name: '唐揚咖哩雞 咖哩麵', desc: '酥脆唐揚雞搭配茶咖哩麵。' },
+            { name: '秘燉牛肉 咖哩麵', desc: '秘燉牛肉搭配茶咖哩麵。' },
+            { name: '經典炸豬排 咖哩麵', desc: '經典炸豬排搭配茶咖哩麵。' },
+            { name: '香煎松阪豬 咖哩麵', desc: '香煎松阪豬搭配茶咖哩麵。' },
+            { name: '日常豬滑丼', desc: '日式經典豬肉滑蛋丼飯。' },
+            { name: '日常牛滑丼', desc: '日式經典牛肉滑蛋丼飯。' },
+            { name: '秘製燻雞 沖烏龍', desc: '秘製燻雞搭配清爽沖烏龍。' },
+            { name: '豐潤叉燒 沖烏龍', desc: '豐潤叉燒搭配清爽沖烏龍。' },
+        ];
+
+        const totalDishes = menuDatabase.length; 
+        const degreesPerSlice = 360 / totalDishes; 
+
+        // DOM 元素快取
+        const spinnerWheel = document.getElementById('spinner-wheel');
+        const spinBtn = document.getElementById('spin-btn');
+        const resetBtnMain = document.getElementById('reset-btn-main');
+        const resultModalContainer = document.getElementById('result-modal-container');
+        const closeBtnModal = document.getElementById('close-modal-btn');
+        const chaosText = document.getElementById('chaos-text');
+        const chaosCore = document.getElementById('chaos-core');
+        const resultName = document.getElementById('result-name');
+        const resultDesc = document.getElementById('result-desc');
+        const cardTitle = document.getElementById('card-title');
+        const finalMessage = document.getElementById('final-message');
+        const extraMeatChoices = document.getElementById('extra-meat-choices');
+        const btnExtraMeat = document.getElementById('btn-extra-meat');
+        const btnNoMeat = document.getElementById('btn-no-meat');
+        // 新增：最終提示視窗
+        const finalMessageModal = document.getElementById('final-message-modal');
+
+
+        let isSpinning = false;
+        let chaosInterval = null;
+        let winningDish = null; 
+
+        // 1. 注入 HTML 菜色區塊
+        function renderWheel() {
+            spinnerWheel.innerHTML = menuDatabase.map((dish, index) => {
+                const sliceRotation = index * degreesPerSlice;
+                const contentRotation = 90 - (degreesPerSlice / 2); 
+                const sliceSkew = 90 - degreesPerSlice; 
+                
+                return `
+                    <div class="dish-slice" style="transform: rotate(${sliceRotation}deg) skewY(${sliceSkew}deg);">
+                        <div class="dish-content" style="transform: rotate(${contentRotation}deg) skewY(-${sliceSkew}deg);">
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 2. 啟動混沌文字動畫
+        function startChaosAnimation() {
+            chaosCore.classList.add('animating');
+            chaosInterval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * totalDishes);
+                chaosText.textContent = menuDatabase[randomIndex].name;
+            }, 50);
+        }
+        
+        // 3. 停止混沌文字動畫
+        function stopChaosAnimation(winningDishName) {
+            clearInterval(chaosInterval);
+            chaosCore.classList.remove('animating');
+            chaosText.textContent = winningDishName;
+        }
+        
+        // 4. 自動隨機選擇並執行脈衝動畫
+        function autoSelectMeat() {
+            const randomChoice = Math.random() < 0.5 ? '要倍肉' : '不要倍肉';
+            const winningBtn = randomChoice === '要倍肉' ? btnExtraMeat : btnNoMeat;
+            const losingBtn = randomChoice === '要倍肉' ? btnNoMeat : btnExtraMeat;
+
+            // 啟動脈衝動畫 (3.5 秒的決策期)
+            btnExtraMeat.classList.add('deciding');
+            btnNoMeat.classList.add('deciding');
+            
+            // 延遲 3500 毫秒，執行決策鎖定
+            setTimeout(() => {
+                
+                // 停止脈衝
+                btnExtraMeat.classList.remove('deciding');
+                btnNoMeat.classList.remove('deciding');
+
+                // 隱藏落選者
+                losingBtn.style.opacity = '0';
+                
+                // 短暫突顯贏家
+                winningBtn.classList.add('chosen');
+                
+                // 延遲 500 毫秒，執行最終確認
+                setTimeout(() => {
+                    
+                    // 清理並隱藏按鈕
+                    extraMeatChoices.classList.remove('visible');
+                    winningBtn.classList.remove('chosen');
+                    winningBtn.style.opacity = '1';
+
+                    // 更新 Modal 內容
+                    cardTitle.textContent = "最終指令確認中...";
+                    // 使用 class 讓字體放大
+                    let finalOutput = `最終決定：<span class="final-decision-text">${randomChoice}</span>`;
+                    
+                    finalMessage.innerHTML = finalOutput;
+                    finalMessage.style.display = 'block';
+                    closeBtnModal.style.display = 'inline-block';
+
+                }, 500); 
+
+            }, 3500); 
+        }
+
+
+        // 5. 處理旋轉邏輯
+        function startSpin() {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            resetBtnMain.style.display = 'none';
+            resultModalContainer.classList.remove('visible'); 
+            extraMeatChoices.classList.remove('visible'); 
+            
+            cardTitle.textContent = "數據解析完成...";
+            finalMessage.style.display = 'none';
+            closeBtnModal.style.display = 'none';
+
+            btnExtraMeat.style.opacity = '1';
+            btnNoMeat.style.opacity = '1';
+
+            startChaosAnimation(); 
+
+            const targetIndex = Math.floor(Math.random() * totalDishes);
+            let targetDegree = targetIndex * degreesPerSlice + (degreesPerSlice / 2);
+            let finalDegree = 360 - targetDegree; 
+            const fullSpins = 5 * 360; 
+            finalDegree += fullSpins; 
+
+            spinnerWheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            spinnerWheel.style.transform = `rotate(${finalDegree}deg)`;
+
+            spinnerWheel.addEventListener('transitionend', () => handleSpinEnd(finalDegree), { once: true });
+        }
+
+        // 6. 處理旋轉結束並彈出圖卡 (加入條件式跳過)
+        function handleSpinEnd(finalDegree) {
+            isSpinning = false;
+            spinBtn.disabled = false;
+            
+            const normalizedIndex = (finalDegree - (5 * 360)) / degreesPerSlice;
+            const finalTargetIndex = (totalDishes - Math.round(normalizedIndex % totalDishes)) % totalDishes;
+            
+            winningDish = menuDatabase[finalTargetIndex]; 
+            
+            stopChaosAnimation(winningDish.name);
+
+            resultName.textContent = `今天就吃「${winningDish.name}」吧！`; 
+            resultDesc.textContent = `${winningDish.desc}`;
+            
+            // 檢查是否為唐揚咖哩雞 (不論飯或麵)
+            const isChicken = winningDish.name.includes('唐揚咖哩雞');
+
+            if (isChicken) {
+                // --- 條件式跳過: 如果選中唐揚咖哩雞 ---
+                resultModalContainer.classList.add('visible'); 
+                resetBtnMain.style.display = 'block';
+
+                cardTitle.textContent = "數據解析完成...";
+                finalMessage.innerHTML = '此為**炸物最佳化**餐點，無需額外增益。';
+                finalMessage.style.display = 'block';
+                closeBtnModal.style.display = 'inline-block';
+                
+            } else {
+                // --- 正常流程: 顯示倍肉選擇並執行動畫 ---
+                resultModalContainer.classList.add('visible'); 
+                extraMeatChoices.classList.add('visible'); 
+                resetBtnMain.style.display = 'block';
+                autoSelectMeat();
+            }
+        }
+        
+        // 7. 重置系統
+        function resetSystem() {
+            // 隱藏所有 Modal
+            resultModalContainer.classList.remove('visible');
+            extraMeatChoices.classList.remove('visible'); 
+            finalMessageModal.style.display = 'none';
+
+            // 重置輪盤
+            spinnerWheel.style.transition = 'none'; 
+            spinnerWheel.style.transform = 'rotate(0deg)';
+            
+            // 延遲後恢復按鈕和混沌文字
+            setTimeout(() => {
+                spinnerWheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)'; 
+                resetBtnMain.style.display = 'none';
+                spinBtn.disabled = false;
+                chaosText.textContent = "等待指令...";
+            }, 50);
+        }
+        
+        // 8. 處理「今天就這樣吃」點擊事件
+        function handleCloseModal() {
+            // 隱藏菜單卡片 Modal
+            resultModalContainer.classList.remove('visible');
+            
+            // 顯示最終提示視窗
+            finalMessageModal.style.display = 'flex';
+        }
+
+
+        // 9. 事件監聽與初始化
+        spinBtn.addEventListener('click', startSpin);
+        resetBtnMain.addEventListener('click', resetSystem);
+        
+        // 更改 closeBtnModal 的行為：點擊後顯示最終提示視窗
+        closeBtnModal.addEventListener('click', handleCloseModal); 
+        
+        // 點擊最終提示視窗的任意處，重置系統
+        finalMessageModal.addEventListener('click', resetSystem);
+
+
+        // 點擊 Modal 外部時的處理 (僅在最終確認按鈕出現時才有效)
+        resultModalContainer.addEventListener('click', (e) => {
+            if (e.target === resultModalContainer && closeBtnModal.style.display === 'inline-block') {
+                handleCloseModal();
+            }
+        });
+
+        renderWheel();
+    </script>
+</body>
+</html>
